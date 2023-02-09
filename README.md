@@ -15,8 +15,8 @@ style app3 fill:transparent;
 style appN fill:transparent;
 subgraph container[ ]
     subgraph node.js app
-        subgraph Express.js
-            socket[Socket.Io]
+        subgraph libp2p
+            socket[CenterSub<br><small>GossipSub</small>]
             handlers[Workflow<br>handlers]
         end
         subgraph <br>Storage<br>abstraction
