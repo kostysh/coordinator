@@ -9,6 +9,8 @@ import { PeerId } from '@libp2p/interface-peer-id';
 import { peerIdFromString } from '@libp2p/peer-id';
 import { Multiaddr, multiaddr } from '@multiformats/multiaddr';
 import { encodeText, decodeText } from '../../src/utils/text';
+import { simpleUid } from '../../src/utils/uid';
+import { defaultExpirationTime } from '../../src/lib/constants';
 import { Logger } from '../../src/utils/logger';
 
 export const logger = Logger('TestNode');
@@ -16,8 +18,8 @@ export const logger = Logger('TestNode');
 export class TestNode {
   serverAddress: Multiaddr;
   serverPeerId: PeerId;
-  protected options: Libp2pOptions;
-  protected libp2p: Libp2p;
+  options: Libp2pOptions;
+  libp2p: Libp2p;
 
   constructor(serverUri: string, options: Libp2pOptions = {}) {
     this.serverAddress = multiaddr(serverUri);
@@ -70,6 +72,9 @@ export class TestNode {
       logger.debug(`Message: ${decodeText(detail.data)} on topic ${detail.topic}`);
     });
 
+    this.libp2p.pubsub.subscribe('hello');
+    this.libp2p.pubsub.subscribe('yo');
+
     await this.libp2p.start();
     logger.info('🚀 Started at:', new Date().toISOString());
   }
@@ -83,6 +88,17 @@ export class TestNode {
   }
 }
 
+const counters = {
+  yo: 1,
+};
+
+export const generateMessage = (nonce: number, query: string) => ({
+  id: simpleUid(),
+  expire: Math.ceil(Date.now() / 1000) + defaultExpirationTime,
+  nonce,
+  query,
+});
+
 export const createFloodNode = async (
   server = '/ip4/127.0.0.1/tcp/33333/ws/p2p/QmcXbDrzUU5ERqRaronWmAJXwe6c7AEkS7qdcsjgEuWPCf',
 ) => {
@@ -92,18 +108,22 @@ export const createFloodNode = async (
 
     setInterval(async () => {
       try {
-        await node.publish('hello', `Hello! ${Date.now()}`);
-      } catch (error) {
-        console.log(error);
-      }
-    }, 5000);
-    setInterval(async () => {
-      try {
-        await node.publish('yo', `Dude! ${Date.now()}`);
+        await node.publish('yo', JSON.stringify(generateMessage(counters.yo++, 'yo')));
       } catch (error) {
         console.log(error);
       }
     }, 3000);
+  } catch (error) {
+    logger.error(error);
+  }
+};
+
+export const createSilentNode = async (
+  server = '/ip4/127.0.0.1/tcp/33333/ws/p2p/QmcXbDrzUU5ERqRaronWmAJXwe6c7AEkS7qdcsjgEuWPCf',
+) => {
+  try {
+    const node = new TestNode(server);
+    await node.start();
   } catch (error) {
     logger.error(error);
   }

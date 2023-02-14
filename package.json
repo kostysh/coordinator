@@ -21,7 +21,8 @@
     "commit": "git-cz -S",
     "start": "node --experimental-specifier-resolution=node dist/src/index.js",
     "start:dev": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts",
-    "start:node": "node --experimental-specifier-resolution=node --loader ts-node/esm scripts/flood.ts"
+    "start:node": "node --experimental-specifier-resolution=node --loader ts-node/esm scripts/flood.ts",
+    "start:node2": "node --experimental-specifier-resolution=node --loader ts-node/esm scripts/silent.ts"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",

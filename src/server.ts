@@ -7,6 +7,7 @@ import { webSockets } from '@libp2p/websockets';
 import { all } from '@libp2p/websockets/filters';
 import { decodeText } from './utils/text';
 import { Logger } from './utils/logger';
+import { GenericMessage } from './lib/messages';
 
 const logger = Logger('Coordinator');
 
@@ -43,7 +44,13 @@ export class Coordinator {
       transports: [webSockets({ filter: all })],
       streamMuxers: [mplex()],
       connectionEncryption: [noise()],
-      pubsub: centerSub(),
+      pubsub: centerSub({
+        messageTransformer: <GenericMessage>(data: BufferSource) => {
+          const dataString = decodeText(data);
+          const dataObj = JSON.parse(dataString) as GenericMessage;
+          return dataObj;
+        },
+      }),
     };
     const peerId = await createFromJSON(this.nodeKeyJson);
     this.libp2p = await createLibp2p({ peerId, ...config });
